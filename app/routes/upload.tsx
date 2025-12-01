@@ -67,14 +67,22 @@ const Upload = () => {
             setStatusText('Preparing data...');
 
             const uuid = generateUUID();
-            const data = {
+            const data: {
+                id: string;
+                resumePath: string;
+                imagePath: string;
+                companyName: string;
+                jobTitle: string;
+                jobDescription: string;
+                feedback: any;
+            } = {
                 id: uuid,
                 resumePath: uploadedFile.path,
                 imagePath: uploadedImage.path,
                 companyName,
                 jobTitle,
                 jobDescription,
-                feedback: ''
+                feedback: {}
             }
 
             console.log("Saving to KV store:", data);
@@ -102,12 +110,91 @@ const Upload = () => {
                 ? feedback.message.content
                 : feedback.message.content[0].text;
 
-            console.log("Feedback text:", feedbackText);
+            console.log("Raw feedback text:", feedbackText);
 
             try {
-                data.feedback = JSON.parse(feedbackText);
+                // Remove markdown code blocks if present
+                let cleanedText = feedbackText.trim();
+                if (cleanedText.startsWith('```json')) {
+                    cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+                } else if (cleanedText.startsWith('```')) {
+                    cleanedText = cleanedText.replace(/```\n?/g, '');
+                }
+
+                console.log("Cleaned feedback text:", cleanedText);
+                const rawFeedback = JSON.parse(cleanedText);
+                console.log("Raw parsed feedback:", rawFeedback);
+
+                // Check if the response is in the correct format
+                if (rawFeedback.overallScore !== undefined) {
+                    // Correct format - use as is
+                    data.feedback = rawFeedback;
+                    console.log("Using correct format feedback");
+                } else {
+                    // Old format - transform it
+                    console.log("Transforming old format feedback");
+                    const jobMatch = rawFeedback.job_match_analysis || {};
+                    const technicalScore = Math.round((jobMatch.technical_alignment || 0) * 10);
+                    const experienceScore = Math.round((jobMatch.experience_level || 0) * 10);
+                    const skillsScore = Math.round((jobMatch.skills_coverage || 0) * 10);
+                    const overallScore = Math.round((rawFeedback.overall_rating || 0) * 10);
+
+                    data.feedback = {
+                        overallScore: overallScore,
+                        toneAndStyle: {
+                            score: technicalScore,
+                            tips: (rawFeedback.formatting_improvements || []).map((tip: string) => ({
+                                type: "improve",
+                                tip: tip.substring(0, 50),
+                                explanation: tip
+                            }))
+                        },
+                        content: {
+                            score: skillsScore,
+                            tips: (rawFeedback.content_suggestions || []).map((tip: string) => ({
+                                type: "improve",
+                                tip: tip.substring(0, 50),
+                                explanation: tip
+                            }))
+                        },
+                        structure: {
+                            score: technicalScore,
+                            tips: (rawFeedback.formatting_improvements || []).map((tip: string) => ({
+                                type: "improve",
+                                tip: tip.substring(0, 50),
+                                explanation: tip
+                            }))
+                        },
+                        skills: {
+                            score: skillsScore,
+                            tips: (rawFeedback.specific_improvements || []).map((tip: string) => ({
+                                type: "improve",
+                                tip: tip.substring(0, 50),
+                                explanation: tip
+                            }))
+                        },
+                        ATS: {
+                            score: technicalScore,
+                            tips: (rawFeedback.ats_optimization || []).map((tip: string) => ({
+                                type: "improve",
+                                tip: tip
+                            }))
+                        }
+                    };
+                }
+
+                console.log("Transformed feedback object:", data.feedback);
+                console.log("Overall score:", data.feedback.overallScore);
+                console.log("Category scores:", {
+                    toneAndStyle: data.feedback.toneAndStyle.score,
+                    content: data.feedback.content.score,
+                    structure: data.feedback.structure.score,
+                    skills: data.feedback.skills.score,
+                    ATS: data.feedback.ATS.score
+                });
             } catch (parseError) {
-                console.error("Failed to parse feedback JSON:", parseError, feedbackText);
+                console.error("Failed to parse feedback JSON:", parseError);
+                console.error("Attempted to parse:", feedbackText);
                 setStatusText('Error: Failed to parse AI feedback.');
                 setIsProcessing(false);
                 return;
@@ -117,7 +204,12 @@ const Upload = () => {
             await kv.set(`resume:${uuid}`, JSON.stringify(data));
 
             setStatusText('Analysis Complete! Redirecting...');
-            navigate(`/resume/${uuid}`)
+            console.log("Final data:", data);
+
+            // Navigate to the resume page after a short delay
+            setTimeout(() => {
+                navigate(`/resume/${uuid}`);
+            }, 1500);
 
         } catch (error) {
             console.error('Error during analysis:', error);

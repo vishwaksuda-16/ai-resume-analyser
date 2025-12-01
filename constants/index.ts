@@ -122,48 +122,58 @@ export const resumes: Resume[] = [
 ];
 
 export const AIResponseFormat = `
-      interface Feedback {
-      overallScore: number; //max 100
-      ATS: {
-        score: number; //rate based on ATS suitability
-        tips: {
-          type: "good" | "improve";
-          tip: string; //give 3-4 tips
-        }[];
-      };
-      toneAndStyle: {
-        score: number; //max 100
-        tips: {
-          type: "good" | "improve";
-          tip: string; //make it a short "title" for the actual explanation
-          explanation: string; //explain in detail here
-        }[]; //give 3-4 tips
-      };
-      content: {
-        score: number; //max 100
-        tips: {
-          type: "good" | "improve";
-          tip: string; //make it a short "title" for the actual explanation
-          explanation: string; //explain in detail here
-        }[]; //give 3-4 tips
-      };
-      structure: {
-        score: number; //max 100
-        tips: {
-          type: "good" | "improve";
-          tip: string; //make it a short "title" for the actual explanation
-          explanation: string; //explain in detail here
-        }[]; //give 3-4 tips
-      };
-      skills: {
-        score: number; //max 100
-        tips: {
-          type: "good" | "improve";
-          tip: string; //make it a short "title" for the actual explanation
-          explanation: string; //explain in detail here
-        }[]; //give 3-4 tips
-      };
-    }`;
+{
+  "overallScore": number, // Overall score from 0-100
+  "ATS": {
+    "score": number, // ATS suitability score from 0-100
+    "tips": [
+      {
+        "type": "good" | "improve",
+        "tip": string // 3-4 concise ATS optimization tips
+      }
+    ]
+  },
+  "toneAndStyle": {
+    "score": number, // Tone and style score from 0-100
+    "tips": [
+      {
+        "type": "good" | "improve",
+        "tip": string, // Short title
+        "explanation": string // Detailed explanation
+      }
+    ] // 3-4 tips
+  },
+  "content": {
+    "score": number, // Content quality score from 0-100
+    "tips": [
+      {
+        "type": "good" | "improve",
+        "tip": string, // Short title
+        "explanation": string // Detailed explanation
+      }
+    ] // 3-4 tips
+  },
+  "structure": {
+    "score": number, // Structure score from 0-100
+    "tips": [
+      {
+        "type": "good" | "improve",
+        "tip": string, // Short title
+        "explanation": string // Detailed explanation
+      }
+    ] // 3-4 tips
+  },
+  "skills": {
+    "score": number, // Skills relevance score from 0-100
+    "tips": [
+      {
+        "type": "good" | "improve",
+        "tip": string, // Short title
+        "explanation": string // Detailed explanation
+      }
+    ] // 3-4 tips
+  }
+}`;
 
 export const prepareInstructions = ({
                                         jobTitle,
@@ -175,14 +185,59 @@ export const prepareInstructions = ({
     AIResponseFormat: string;
 }) =>
     `You are an expert in ATS (Applicant Tracking System) and resume analysis.
-  Please analyze and rate this resume and suggest how to improve it.
-  The rating can be low if the resume is bad.
-  Be thorough and detailed. Don't be afraid to point out any mistakes or areas for improvement.
-  If there is a lot to improve, don't hesitate to give low scores. This is to help the user to improve their resume.
-  If available, use the job description for the job user is applying to to give more detailed feedback.
-  If provided, take the job description into consideration.
-  The job title is: ${jobTitle}
-  The job description is: ${jobDescription}
-  Provide the feedback using the following format: ${AIResponseFormat}
-  Return the analysis as a JSON object, without any other text and without the backticks.
-  Do not include any other text or comments.`;
+
+CRITICAL INSTRUCTIONS:
+1. Analyze the resume thoroughly and provide honest, detailed feedback
+2. Rate each category from 0-100 (don't hesitate to give low scores if warranted)
+3. Compare the resume against the job requirements below
+4. Provide 3-4 actionable tips for each category
+5. Your response MUST be ONLY a valid JSON object matching the exact format below
+6. DO NOT include any markdown formatting, code blocks, or explanatory text
+7. DO NOT wrap the JSON in backticks or code fences
+8. Return ONLY the raw JSON object
+
+Job Information:
+- Job Title: ${jobTitle}
+- Job Description: ${jobDescription}
+
+Required JSON Response Format:
+${AIResponseFormat}
+
+EXAMPLE of correct response structure:
+{
+  "overallScore": 75,
+  "ATS": {
+    "score": 80,
+    "tips": [
+      {"type": "good", "tip": "Resume includes key technical keywords"},
+      {"type": "improve", "tip": "Add more quantifiable achievements"}
+    ]
+  },
+  "toneAndStyle": {
+    "score": 70,
+    "tips": [
+      {"type": "good", "tip": "Professional tone", "explanation": "The resume maintains a professional and confident tone throughout"},
+      {"type": "improve", "tip": "Action verbs", "explanation": "Use stronger action verbs like 'spearheaded' instead of 'worked on'"}
+    ]
+  },
+  "content": {
+    "score": 65,
+    "tips": [
+      {"type": "improve", "tip": "Add metrics", "explanation": "Include quantifiable results like 'improved performance by 30%'"}
+    ]
+  },
+  "structure": {
+    "score": 85,
+    "tips": [
+      {"type": "good", "tip": "Clear sections", "explanation": "Resume has well-organized sections"}
+    ]
+  },
+  "skills": {
+    "score": 70,
+    "tips": [
+      {"type": "improve", "tip": "Add missing skills", "explanation": "Include ${jobTitle}-specific skills mentioned in job description"}
+    ]
+  }
+}
+
+Now analyze the resume and return ONLY the JSON object, nothing else.`;
