@@ -18,10 +18,9 @@ pipeline {
         
         stage('Push to Docker Hub') {
             steps {
-                echo 'Pushing to Docker Hub...'{
+                    echo 'Pushing to Docker Hub...'
                     bat 'docker login'
                     bat 'docker push vishwak16/ai-resume-analyser:v1'
-                }
             }
         }
         
