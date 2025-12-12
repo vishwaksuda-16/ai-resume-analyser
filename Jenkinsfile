@@ -33,6 +33,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 echo 'Deploying to Kubernetes...'
+                bat 'minikube start'
                 bat 'kubectl set image deployment/ai-resume-analyser ai-resume-analyser=vishwak16/ai-resume-analyser:v1'
                 bat 'kubectl rollout status deployment/ai-resume-analyser'
             }
@@ -40,6 +41,9 @@ pipeline {
     }
     
     post {
+        always {
+            bat 'minikube stop'
+        }
         success {
             echo 'Pipeline completed successfully!'
         }
