@@ -1,5 +1,3 @@
-//Test for Github Webhook - SCM Polling
-
 pipeline {
     agent any
     
@@ -30,20 +28,24 @@ pipeline {
             }
         }
         
-        stage('Deploy to Kubernetes') {
+        stage('Deploy with Ansible') {
             steps {
-                echo 'Deploying to Kubernetes...'
-                bat 'minikube start'
-                bat 'kubectl set image deployment/ai-resume-analyser ai-resume-analyser=vishwak16/ai-resume-analyser:v1'
-                bat 'kubectl rollout status deployment/ai-resume-analyser'
+                echo 'Deploying application using Ansible...'
+                bat '''
+                    wsl ansible-playbook -i /home/vishwak/ansible-projects/job-platform/inventory.ini /home/YOUR_WSL_USERNAME/ansible-projects/job-platform/site.yml
+                '''
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                echo 'Verifying deployment...'
+                bat 'docker ps'
             }
         }
     }
     
     post {
-        always {
-            bat 'minikube stop'
-        }
         success {
             echo 'Pipeline completed successfully!'
         }
@@ -52,3 +54,12 @@ pipeline {
         }
     }
 }
+
+        // stage('Deploy to Kubernetes') {
+        //     steps {
+        //         echo 'Deploying to Kubernetes...'
+        //         bat 'minikube start'
+        //         bat 'kubectl set image deployment/ai-resume-analyser ai-resume-analyser=vishwak16/ai-resume-analyser:v1'
+        //         bat 'kubectl rollout status deployment/ai-resume-analyser'
+        //     }
+        // }
