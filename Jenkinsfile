@@ -31,7 +31,8 @@ pipeline {
         stage('Deploy with Ansible') {
             steps {
                 echo 'Deploying application using Ansible...'
-                bat 'wsl ansible-playbook -i /home/vishwak/ansible-projects/job-platform/inventory.ini /home/vishwak/ansible-projects/job-platform/site.yml'
+                bat 'wsl ansible-playbook -i /home/vishwak/ansible-projects/job-platform/inventory.ini /home/vishwak/ansible-projects/job-platform/site.yml -K'
+                bat 'WSL@16'
             }
         }
         
