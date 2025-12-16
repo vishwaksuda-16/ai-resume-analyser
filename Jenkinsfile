@@ -31,9 +31,7 @@ pipeline {
         stage('Deploy with Ansible') {
             steps {
                 echo 'Deploying application using Ansible...'
-                bat '''
-                    wsl ansible-playbook -i /home/vishwak/ansible-projects/job-platform/inventory.ini /home/YOUR_WSL_USERNAME/ansible-projects/job-platform/site.yml
-                '''
+                bat 'wsl ansible-playbook -i /home/vishwak/ansible-projects/job-platform/inventory.ini /home/vishwak/ansible-projects/job-platform/site.yml'
             }
         }
         
@@ -55,11 +53,11 @@ pipeline {
     }
 }
 
-        // stage('Deploy to Kubernetes') {
-        //     steps {
-        //         echo 'Deploying to Kubernetes...'
-        //         bat 'minikube start'
-        //         bat 'kubectl set image deployment/ai-resume-analyser ai-resume-analyser=vishwak16/ai-resume-analyser:v1'
-        //         bat 'kubectl rollout status deployment/ai-resume-analyser'
-        //     }
-        // }
+// stage('Deploy to Kubernetes') {
+//     steps {
+//         echo 'Deploying to Kubernetes...'
+//         bat 'minikube start'
+//         bat 'kubectl set image deployment/ai-resume-analyser ai-resume-analyser=vishwak16/ai-resume-analyser:v1'
+//         bat 'kubectl rollout status deployment/ai-resume-analyser'
+//     }
+// }
